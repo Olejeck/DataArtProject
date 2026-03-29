@@ -20,4 +20,6 @@ public class Message {
 
     @ManyToOne
     private User sender;
+    @ManyToOne
+    private ChatRoom room; // Це поле вказує, в якій кімнаті або діалозі знаходиться повідомлення
 }
