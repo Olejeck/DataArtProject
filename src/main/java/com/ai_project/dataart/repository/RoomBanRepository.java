@@ -1,6 +1,6 @@
-package repository;
+package com.ai_project.dataart.repository;
 
-import entity.RoomBan;
+import com.ai_project.dataart.entity.RoomBan;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 

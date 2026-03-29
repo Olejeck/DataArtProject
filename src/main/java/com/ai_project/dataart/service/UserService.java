@@ -1,9 +1,9 @@
-package service;
+package com.ai_project.dataart.service;
 
-import dto.UserRegistrationDto;
-import entity.User;
+import com.ai_project.dataart.dto.UserRegistrationDto;
+import com.ai_project.dataart.entity.User;
+import com.ai_project.dataart.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service

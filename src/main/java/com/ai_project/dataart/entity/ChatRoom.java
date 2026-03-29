@@ -1,4 +1,4 @@
-package entity;
+package com.ai_project.dataart.entity;
 
 import jakarta.persistence.*;
 

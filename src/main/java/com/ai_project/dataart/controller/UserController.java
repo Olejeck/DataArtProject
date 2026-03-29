@@ -1,8 +1,8 @@
-package controller;
+package com.ai_project.dataart.controller;
 
-import service.UserService;
-import dto.UserRegistrationDto;
-import entity.User;
+import com.ai_project.dataart.dto.UserRegistrationDto;
+import com.ai_project.dataart.service.UserService;
+import com.ai_project.dataart.entity.User;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
