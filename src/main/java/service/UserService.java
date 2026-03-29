@@ -1,5 +1,6 @@
-package Service;
+package service;
 
+import dto.UserRegistrationDto;
 import entity.User;
 import org.springframework.stereotype.Service;
 import repository.UserRepository;
@@ -15,16 +16,20 @@ public class UserService {
     }
 
     @Transactional
-    public User registerNewUser(User user) {
-        // 1. Перевірка унікальності (вимоги 2.1.2) [cite: 24, 25]
-        if (userRepository.existsByUsername(user.getUsername())) {
+    public User registerNewUser(UserRegistrationDto dto) {
+        // 1. Перевірка унікальності
+        if (userRepository.existsByUsername(dto.getUsername())) {
             throw new RuntimeException("Username is already taken");
         }
-        if (userRepository.existsByEmail(user.getEmail())) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email is already taken");
         }
 
-        // 2. Тут пізніше додамо хешування пароля (вимога 2.1.4) [cite: 37]
+        // 2. Створення об'єкта User з DTO
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        user.setEmail(dto.getEmail());
+        user.setPassword(dto.getPassword()); // Поки що без хешування
 
         return userRepository.save(user);
     }
