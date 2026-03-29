@@ -1,7 +1,9 @@
 package com.ai_project.dataart.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 public class UserBan {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

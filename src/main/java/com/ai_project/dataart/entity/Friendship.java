@@ -1,6 +1,10 @@
 package com.ai_project.dataart.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
+@Data
+
 @Entity
 public class Friendship {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

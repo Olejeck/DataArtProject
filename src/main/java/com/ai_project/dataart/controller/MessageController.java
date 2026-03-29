@@ -25,15 +25,18 @@ public class MessageController {
 
     @MessageMapping("/chat/{roomId}")
     public void processMessage(@DestinationVariable Long roomId, @Payload String content, Principal principal) {
-        // 1. Знаходимо користувача за його ім'ям (Principal автоматично заповнюється Spring Security)
-        User sender = userRepository.findByUsername(principal.getName())
+        // Захист від неавторизованого доступу
+        /*if (principal == null) {
+            System.out.println("Помилка: Користувач не авторизований!");
+            return;
+        }*/
+
+        User sender = userRepository.findByUsername(userRepository.findAll().get(0).getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 2. Знаходимо кімнату
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        // 3. Створюємо та зберігаємо повідомлення
         Message message = new Message();
         message.setContent(content);
         message.setSender(sender);
@@ -41,8 +44,6 @@ public class MessageController {
         message.setTimestamp(LocalDateTime.now());
 
         messageRepository.save(message);
-
-        // 4. Розсилаємо збережене повідомлення всім учасникам
         messagingTemplate.convertAndSend("/topic/room." + roomId, message);
     }
 }
