@@ -22,7 +22,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Вимикаємо для спрощення тестів через Postman
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register").permitAll() // Дозволяємо реєстрацію всім
+                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()// Дозволяємо реєстрацію всім
                         .anyRequest().authenticated()
                 );
         return http.build();

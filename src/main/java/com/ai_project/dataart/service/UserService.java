@@ -1,5 +1,6 @@
 package com.ai_project.dataart.service;
 
+import com.ai_project.dataart.dto.UserLoginDto;
 import com.ai_project.dataart.dto.UserRegistrationDto;
 import com.ai_project.dataart.entity.User;
 import com.ai_project.dataart.repository.UserRepository;
@@ -36,5 +37,17 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
         return userRepository.save(user);
+    }
+    // Додай це в UserService.java
+    public User authenticate(UserLoginDto loginDto) {
+        User user = userRepository.findByEmail(loginDto.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Перевіряємо зашифрований пароль
+        if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+
+        return user;
     }
 }

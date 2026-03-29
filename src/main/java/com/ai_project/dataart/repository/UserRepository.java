@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     // Spring сам зробить запит: SELECT * FROM users WHERE username = ?
     Optional<User> findByUsername(String username);
-
+    Optional<User> findByEmail(String email);
     // Перевірка унікальності перед реєстрацією
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);

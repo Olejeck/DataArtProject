@@ -1,5 +1,6 @@
 package com.ai_project.dataart.controller;
 
+import com.ai_project.dataart.dto.UserLoginDto;
 import com.ai_project.dataart.dto.UserRegistrationDto;
 import com.ai_project.dataart.service.UserService;
 import com.ai_project.dataart.entity.User;
@@ -24,6 +25,17 @@ public class UserController {
             return ResponseEntity.ok("User registered: " + user.getUsername());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserLoginDto loginDto) {
+        try {
+            User user = userService.authenticate(loginDto);
+            // Поки що просто повертаємо успіх.
+            // Пізніше ми тут будемо створювати сесію або токен.
+            return ResponseEntity.ok("Welcome, " + user.getUsername() + "!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(401).body(e.getMessage());
         }
     }
 }
