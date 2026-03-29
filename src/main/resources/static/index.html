@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<div id="messages"></div>
+<input type="text" id="messageText" placeholder="sendMessage..."/>
+<button onclick="sendMessage()">sendMessage</button>
+
+<script>
+    var stompClient = null;
+    var roomId = 1; // ID кімнати для тесту
+
+    function connect() {
+        var socket = new SockJS('http://localhost:8080/ws-chat');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/topic/room.' + roomId, function (messageOutput) {
+                var resp = JSON.parse(messageOutput.body);
+                document.getElementById("messages").innerHTML += "<p>" + resp.sender.username + ": " + resp.content + "</p>";
+            });
+        });
+    }
+
+    function sendMessage() {
+        var text = document.getElementById("messageText").value;
+        stompClient.send("/app/chat/" + roomId, {}, text);
+    }
+
+    connect();
+</script>
+</body>
+</html>

@@ -18,7 +18,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Точка підключення для браузера
-        registry.addEndpoint("/ws-chat").withSockJS();
+        registry.addEndpoint("/ws-chat")
+                .setAllowedOrigins("http://localhost:63342", "http://127.0.0.1:63342") // Дозволяємо запити з IntelliJ
+                .withSockJS();
     }
+
 }

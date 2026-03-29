@@ -2,9 +2,11 @@ package com.ai_project.dataart.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@Data
 @Entity
 public class Message {
     @Id

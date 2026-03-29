@@ -20,9 +20,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Вимикаємо для спрощення тестів через Postman
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()// Дозволяємо реєстрацію всім
+                        // Дозволяємо підключення до вебсокета всім
+                        .requestMatchers("/ws-chat/**").permitAll()
+                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();
