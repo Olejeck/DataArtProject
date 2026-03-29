@@ -34,8 +34,10 @@ public class MessageController {
         User sender = userRepository.findByUsername(userRepository.findAll().get(0).getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        ChatRoom room = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+        // Замість пошуку за конкретним ID, беремо першу кімнату з бази
+        ChatRoom room = chatRoomRepository.findAll().stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Кімната не знайдена! Створіть її через Postman або БД."));
 
         Message message = new Message();
         message.setContent(content);

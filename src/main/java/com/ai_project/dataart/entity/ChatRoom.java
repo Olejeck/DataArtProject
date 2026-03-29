@@ -1,5 +1,6 @@
 package com.ai_project.dataart.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -20,9 +21,10 @@ public class ChatRoom {
     @ManyToOne
     private User owner;
 
+    @JsonIgnore
     @ManyToMany
     private Set<User> admins; // Адміни можуть видаляти повідомлення та банити [cite: 117-124]
-
+    @JsonIgnore
     @ManyToMany
     private Set<User> members;
 }
