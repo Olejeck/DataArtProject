@@ -1,9 +1,10 @@
 package com.ai_project.dataart.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.util.Set;
-
+@Data
 @Entity
 public class ChatRoom {
     @Id
