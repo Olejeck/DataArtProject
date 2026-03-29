@@ -22,8 +22,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Дозволяємо підключення до вебсокета всім
-                        .requestMatchers("/ws-chat/**").permitAll()
+                        // Дозволяємо підключення до вебсокета та статики всім (для тесту)
+                        .requestMatchers("/ws-chat/**", "/index.html", "/").permitAll()
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                         .anyRequest().authenticated()
                 );
