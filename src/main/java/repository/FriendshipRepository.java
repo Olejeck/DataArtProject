@@ -1,6 +1,6 @@
-package repo;
+package repository;
 
-import Entity.Friendship;
+import entity.Friendship;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 

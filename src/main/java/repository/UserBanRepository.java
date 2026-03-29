@@ -1,7 +1,7 @@
-package repo;
+package repository;
 
 
-import Entity.UserBan;
+import entity.UserBan;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 

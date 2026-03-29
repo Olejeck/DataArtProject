@@ -1,8 +1,10 @@
-package Entity;
+package entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
+@Data
 @Entity
 public class User {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,4 +20,5 @@ public class User {
 
     @NotBlank
     private String password; // Будемо зберігати хеш
+
 }

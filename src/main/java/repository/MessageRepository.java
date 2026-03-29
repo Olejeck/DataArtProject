@@ -1,6 +1,6 @@
-package repo;
+package repository;
 
-import Entity.Message;
+import entity.Message;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 

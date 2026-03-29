@@ -1,8 +1,8 @@
 package Service;
 
-import Entity.User;
+import entity.User;
 import org.springframework.stereotype.Service;
-import repo.UserRepository;
+import repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
