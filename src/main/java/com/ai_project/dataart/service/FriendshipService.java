@@ -5,6 +5,7 @@ import com.ai_project.dataart.entity.User;
 import com.ai_project.dataart.repository.FriendshipRepository;
 import com.ai_project.dataart.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +28,8 @@ public class FriendshipService {
             throw new RuntimeException("Ви не можете додати себе у друзі");
         }
 
-        // Перевірка, чи запит вже існує
-        if (friendshipRepository.existsByRequesterAndRecipient(requester, recipient) ||
-            friendshipRepository.existsByRequesterAndRecipient(recipient, requester)) {
+        // ПРАВИЛЬНО: Використовуємо isPresent() для Optional
+        if (friendshipRepository.findRelation(requester, recipient).isPresent()) {
             throw new RuntimeException("Запит вже надіслано або ви вже друзі");
         }
 
@@ -45,20 +45,31 @@ public class FriendshipService {
         User requester = userRepository.findByUsername(requesterUsername)
                 .orElseThrow(() -> new RuntimeException("Користувача не знайдено"));
 
-        Friendship friendship = friendshipRepository.findByRequesterAndRecipient(requester, recipient)
+        // Шукаємо існуючий запит, де поточний юзер є отримувачем
+        Friendship friendship = friendshipRepository.findRelation(requester, recipient)
                 .orElseThrow(() -> new RuntimeException("Запит на дружбу не знайдено"));
+
+        if (friendship.isAccepted()) {
+            throw new RuntimeException("Ви вже друзі");
+        }
 
         friendship.setAccepted(true);
         friendshipRepository.save(friendship);
     }
 
     public List<User> getFriends(User user) {
-        // Отримуємо всіх, де користувач є ініціатором або отримувачем, і статус accepted = true
-        List<Friendship> friendships = friendshipRepository.findAllByRequesterOrRecipient(user, user);
-        
+        // ПРАВИЛЬНО: Викликаємо метод, який ми створили в репозиторії
+        List<Friendship> friendships = friendshipRepository.findAcceptedFriends(user);
+
         return friendships.stream()
-                .filter(Friendship::isAccepted)
                 .map(f -> f.getRequester().equals(user) ? f.getRecipient() : f.getRequester())
+                .collect(Collectors.toList());
+    }
+
+    public List<User> getIncomingRequests(User user) {
+        return friendshipRepository.findAllByRecipientAndAcceptedFalse(user)
+                .stream()
+                .map(Friendship::getRequester)
                 .collect(Collectors.toList());
     }
 }

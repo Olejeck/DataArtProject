@@ -40,14 +40,13 @@ public class UserService {
     }
     // Додай це в UserService.java
     public User authenticate(UserLoginDto loginDto) {
-        User user = userRepository.findByEmail(loginDto.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Змінюємо findByEmail на findByUsername
+        User user = userRepository.findByUsername(loginDto.getUsername())
+                .orElseThrow(() -> new RuntimeException("Користувача з таким логіном не знайдено"));
 
-        // Перевіряємо зашифрований пароль
         if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new RuntimeException("Невірний пароль");
         }
-
         return user;
     }
 }

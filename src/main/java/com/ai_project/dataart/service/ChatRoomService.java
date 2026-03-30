@@ -4,6 +4,7 @@ import com.ai_project.dataart.dto.ChatRoomDto;
 import com.ai_project.dataart.entity.ChatRoom;
 import com.ai_project.dataart.entity.User;
 import com.ai_project.dataart.repository.ChatRoomRepository;
+import com.ai_project.dataart.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public ChatRoom createRoom(ChatRoomDto dto, User owner) {
@@ -37,5 +39,26 @@ public class ChatRoomService {
         return chatRoomRepository.findAll().stream()
                 .filter(room -> !room.isPrivate())
                 .toList();
+    }
+    @Transactional
+    public ChatRoom getOrCreatePrivateChat(User user1, String username2) {
+        User user2 = userRepository.findByUsername(username2)
+                .orElseThrow(() -> new RuntimeException("Юзера не знайдено"));
+
+        // Шукаємо існуючу приватну кімнату між цими двома
+        return chatRoomRepository.findAll().stream()
+                .filter(r -> r.isPrivate() && r.getMembers().size() == 2)
+                .filter(r -> r.getMembers().contains(user1) && r.getMembers().contains(user2))
+                .findFirst()
+                .orElseGet(() -> {
+                    // Якщо не знайшли — створюємо нову
+                    ChatRoom room = new ChatRoom();
+                    room.setName("DM_" + user1.getUsername() + "_" + user2.getUsername());
+                    room.setPrivate(true);
+                    room.setOwner(user1);
+                    room.getMembers().add(user1);
+                    room.getMembers().add(user2);
+                    return chatRoomRepository.save(room);
+                });
     }
 }

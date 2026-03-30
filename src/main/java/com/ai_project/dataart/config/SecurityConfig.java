@@ -28,10 +28,12 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                // У метод filterChain класу SecurityConfig
                 .authorizeHttpRequests(auth -> auth
-                        // Дозволяємо всі HTML файли, корінь та вебсокети
-                        .requestMatchers("/", "/*.html", "/ws-chat/**").permitAll()
+                        .requestMatchers("/", "/*.html", "/favicon.ico", "/ws-chat/**").permitAll()
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                        // Всі запити до /api/friends потребують авторизації (JWT)
+                        .requestMatchers("/api/friends/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

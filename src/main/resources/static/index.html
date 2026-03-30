@@ -13,27 +13,59 @@
     </style>
 </head>
 <body>
+
 <h2>Чат-кімната</h2>
 <div id="messages">
     <div id="history"><em>Завантаження історії...</em></div>
     <div id="new-messages"></div>
 </div>
-
+<div>
+    <span id="userDisplay" style="font-weight: bold; margin-right: 10px;"></span>
+    <button onclick="logout()" style="background: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer;">Вийти</button>
+</div>
 <input type="text" id="messageText" placeholder="Напишіть щось..." style="width: 70%; padding: 5px;"/>
 <button onclick="sendMessage()" style="padding: 5px 15px;">Надіслати</button>
 
 <script>
-    // Беремо токен з пам'яті браузера
+    // 1. Беремо токен з пам'яті браузера
     var jwtToken = localStorage.getItem('jwtToken');
-    var currentUsername = localStorage.getItem('currentUsername');
 
-    // Якщо токена немає — виганяємо на сторінку логіну
+    // 2. Якщо токена немає — відправляємо юзера логінитися
     if (!jwtToken) {
+        alert("Ви не авторизовані!");
         window.location.href = "login.html";
     }
 
     var stompClient = null;
-    var roomId = 1;
+    var roomId = 1; // Перевір актуальний ID через Postman (GET /api/rooms/public)
+    function loadHistory() {
+        console.log("Завантаження історії для кімнати:", roomId);
+        fetch('/api/rooms/' + roomId + '/messages', {
+            headers: { 'Authorization': 'Bearer ' + jwtToken }
+        })
+            .then(res => {
+                if (res.status === 403 || res.status === 401) {
+                    throw new Error("Помилка авторизації (403/401). Онови токен у коді!");
+                }
+                if (!res.ok) {
+                    throw new Error("Сервер повернув помилку: " + res.status);
+                }
+                return res.json();
+            })
+            .then(data => {
+                const historyDiv = document.getElementById("history");
+                historyDiv.innerHTML = "<b>Історія завантажена:</b><br>";
+                if (data.length === 0) historyDiv.innerHTML += "<em>Повідомлень поки немає</em>";
+                data.forEach(msg => {
+                    historyDiv.innerHTML += `<div class='msg'><b>${msg.sender.username}:</b> ${msg.content}</div>`;
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("history").innerHTML = `<b style='color:red'>${err.message}</b>`;
+            });
+    }
+
     function connect() {
         loadHistory(); // Завантажуємо старі повідомлення
 
@@ -64,10 +96,19 @@
             input.value = "";
         }
     }
+
+    document.getElementById('userDisplay').innerText = "Ви: " + localStorage.getItem('currentUsername');
     function logout() {
         localStorage.clear();
         window.location.href = "login.html";
     }
+    document.getElementById("messageText").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Щоб не було переносу рядка в полі
+            sendMessage();
+        }
+    });
+    connect();
 </script>
 </body>
 </html>
