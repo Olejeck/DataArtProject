@@ -29,14 +29,12 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Дозволяємо реєстрацію, логін та вебсокети
-                        .requestMatchers("/ws-chat/**", "/index.html", "/").permitAll()
+                        // Дозволяємо всі HTML файли, корінь та вебсокети
+                        .requestMatchers("/", "/*.html", "/ws-chat/**").permitAll()
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                         .anyRequest().authenticated()
                 )
-                // Робимо сесії STATELESS (кожен запит має містити токен)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Додаємо наш JWT фільтр перед стандартним фільтром Spring
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
