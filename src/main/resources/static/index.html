@@ -1,106 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
+    <meta charset="UTF-8">
     <title>Chat Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; background: #fdfdfd; }
+        .msg { margin: 5px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .system { color: blue; font-weight: bold; }
+    </style>
 </head>
 <body>
-<div id="messages"></div>
-<input type="text" id="messageText" placeholder="sendMessage..."/>
-<button onclick="sendMessage()">sendMessage</button>
+<h2>Чат-кімната</h2>
+<div id="messages">
+    <div id="history"><em>Завантаження історії...</em></div>
+    <div id="new-messages"></div>
+</div>
+
+<input type="text" id="messageText" placeholder="Напишіть щось..." style="width: 70%; padding: 5px;"/>
+<button onclick="sendMessage()" style="padding: 5px 15px;">Надіслати</button>
 
 <script>
     var stompClient = null;
-    var roomId = 1; // ID кімнати для тесту
 
-    // УВАГА: Сюди треба вставити реальний токен, який ти отримав після /api/users/login через Postman
-    var jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvbGVnIiwiaWF0IjoxNzc0OTAyMjE3LCJleHAiOjE3NzQ5ODg2MTd9.Zv8zRDCdvCFcQeBs7JJAm7kn9iO8s3UVdCO5FJDEhA8";
+    // КРОК 1: ПЕРЕВІР ЦЕЙ ID ЧЕРЕЗ POSTMAN (GET /api/rooms/public)
+    var roomId = 1;
 
-    function connect() {
-        var socket = new SockJS('http://localhost:8080/ws-chat');
-        stompClient = Stomp.over(socket);
-
-        // Передаємо токен у заголовках STOMP
-        var headers = {
-            'Authorization': 'Bearer ' + jwtToken
-        };
-
-        stompClient.connect(headers, function (frame) {
-            console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/room.' + roomId, function (messageOutput) {
-                var resp = JSON.parse(messageOutput.body);
-                document.getElementById("messages").innerHTML += "<p><b>" + resp.sender.username + "</b>: " + resp.content + "</p>";
-            });
-        }, function(error) {
-            console.error("Помилка підключення:", error);
-            alert("Не вдалося підключитися. Перевір валідність токена!");
-        });
-    }
-
-    function sendMessage() {
-        var text = document.getElementById("messageText").value;
-        stompClient.send("/app/chat/" + roomId, {}, text);
-    }
-
-    connect();
-</script>
-<script>
-    var stompClient = null;
-    var roomId = 2; // Переконайся, що тут правильний ID (наприклад, 2)
-    var jwtToken = "ТВІЙ_АКТУАЛЬНИЙ_ТОКЕН";
+    // КРОК 2: ВСТАВ СВІЙ ТОКЕН
+    var jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvbGVnIiwiaWF0IjoxNzc0OTAzNzU2LCJleHAiOjE3NzQ5OTAxNTZ9.xiM-UrLmnIZk4WmEjxUOkd0l1WNVAHRYXAFUD150Q4k";
 
     function loadHistory() {
-        // Використовуємо стандартний fetch для отримання історії з нашого API
+        console.log("Завантаження історії для кімнати:", roomId);
         fetch('/api/rooms/' + roomId + '/messages', {
-            headers: {
-                'Authorization': 'Bearer ' + jwtToken
-            }
+            headers: { 'Authorization': 'Bearer ' + jwtToken }
         })
-            .then(response => response.json())
-            .then(messages => {
-                const messagesDiv = document.getElementById("messages");
-                // Очищуємо поле перед завантаженням (про всяк випадок)
-                messagesDiv.innerHTML = "<h3>Історія повідомлень:</h3>";
-
-                messages.forEach(msg => {
-                    // Додаємо кожне повідомлення з історії в UI
-                    messagesDiv.innerHTML += "<p><b>" + msg.sender.username + "</b>: " + msg.content + "</p>";
-                });
-                messagesDiv.innerHTML += "<hr/>";
+            .then(res => {
+                if (res.status === 403 || res.status === 401) {
+                    throw new Error("Помилка авторизації (403/401). Онови токен у коді!");
+                }
+                if (!res.ok) {
+                    throw new Error("Сервер повернув помилку: " + res.status);
+                }
+                return res.json();
             })
-            .catch(error => console.error('Помилка завантаження історії:', error));
+            .then(data => {
+                const historyDiv = document.getElementById("history");
+                historyDiv.innerHTML = "<b>Історія завантажена:</b><br>";
+                if (data.length === 0) historyDiv.innerHTML += "<em>Повідомлень поки немає</em>";
+                data.forEach(msg => {
+                    historyDiv.innerHTML += `<div class='msg'><b>${msg.sender.username}:</b> ${msg.content}</div>`;
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("history").innerHTML = `<b style='color:red'>${err.message}</b>`;
+            });
     }
 
     function connect() {
-        // 1. Спочатку завантажуємо історію з бази даних
-        loadHistory();
+        loadHistory(); // Завантажуємо старі повідомлення
 
-        // 2. Потім підключаємося до вебсокета для нових повідомлень
         var socket = new SockJS('http://localhost:8080/ws-chat');
         stompClient = Stomp.over(socket);
 
-        var headers = {
-            'Authorization': 'Bearer ' + jwtToken
-        };
+        stompClient.connect({ 'Authorization': 'Bearer ' + jwtToken }, function (frame) {
+            console.log('Успішне з\'єднання!');
 
-        stompClient.connect(headers, function (frame) {
-            console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/room.' + roomId, function (messageOutput) {
-                var resp = JSON.parse(messageOutput.body);
-                // Додаємо нові повідомлення в кінець списку
-                document.getElementById("messages").innerHTML += "<p><b>" + resp.sender.username + "</b>: " + resp.content + "</p>";
+            stompClient.subscribe('/topic/room.' + roomId, function (output) {
+                var msg = JSON.parse(output.body);
+                document.getElementById("new-messages").innerHTML +=
+                    `<div class='msg'><b>${msg.sender.username}:</b> ${msg.content}</div>`;
+
+                // Автопрокрутка вниз
+                var objDiv = document.getElementById("messages");
+                objDiv.scrollTop = objDiv.scrollHeight;
             });
         }, function(error) {
-            console.error("Помилка підключення:", error);
+            alert("Помилка підключення! Перевір токен або чи запущено сервер.");
         });
     }
 
     function sendMessage() {
-        var text = document.getElementById("messageText").value;
-        if (text.trim() !== "") {
-            stompClient.send("/app/chat/" + roomId, {}, text);
-            document.getElementById("messageText").value = ""; // Очищуємо поле вводу
+        var input = document.getElementById("messageText");
+        if (input.value.trim() !== "" && stompClient) {
+            stompClient.send("/app/chat/" + roomId, {}, input.value);
+            input.value = "";
         }
     }
 
