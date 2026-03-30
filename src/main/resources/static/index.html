@@ -14,15 +14,27 @@
     var stompClient = null;
     var roomId = 1; // ID кімнати для тесту
 
+    // УВАГА: Сюди треба вставити реальний токен, який ти отримав після /api/users/login через Postman
+    var jwtToken = "СЮДИ_ВСТАВ_СВІЙ_JWT_ТОКЕН";
+
     function connect() {
         var socket = new SockJS('http://localhost:8080/ws-chat');
         stompClient = Stomp.over(socket);
-        stompClient.connect({}, function (frame) {
+
+        // Передаємо токен у заголовках STOMP
+        var headers = {
+            'Authorization': 'Bearer ' + jwtToken
+        };
+
+        stompClient.connect(headers, function (frame) {
             console.log('Connected: ' + frame);
             stompClient.subscribe('/topic/room.' + roomId, function (messageOutput) {
                 var resp = JSON.parse(messageOutput.body);
-                document.getElementById("messages").innerHTML += "<p>" + resp.sender.username + ": " + resp.content + "</p>";
+                document.getElementById("messages").innerHTML += "<p><b>" + resp.sender.username + "</b>: " + resp.content + "</p>";
             });
+        }, function(error) {
+            console.error("Помилка підключення:", error);
+            alert("Не вдалося підключитися. Перевір валідність токена!");
         });
     }
 
@@ -34,4 +46,4 @@
     connect();
 </script>
 </body>
-</html>
+</html>ckr
