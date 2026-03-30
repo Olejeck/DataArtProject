@@ -2,7 +2,7 @@ package com.ai_project.dataart.controller;
 
 import com.ai_project.dataart.dto.ChatRoomDto;
 import com.ai_project.dataart.entity.User;
-import com.ai_project.dataart.repository.MessageRepository;
+import com.ai_project.dataart.repository.MessageRepository; // Переконайся, що цей імпорт є
 import com.ai_project.dataart.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,14 +14,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ChatRoomController {
     private final ChatRoomService chatRoomService;
-    // У ChatRoomController.java
-    private final MessageRepository messageRepository;
+    private final MessageRepository messageRepository; // Додаємо репозиторій сюди
 
-    @GetMapping("/{roomId}/messages")
-    public ResponseEntity<?> getRoomMessages(@PathVariable Long roomId) {
-        // Повертаємо історію повідомлень у хронологічному порядку [cite: 164]
-        return ResponseEntity.ok(messageRepository.findByRoomIdOrderByTimestampAsc(roomId));
-    }
     @PostMapping("/create")
     public ResponseEntity<?> createRoom(@RequestBody ChatRoomDto dto, @AuthenticationPrincipal User user) {
         try {
@@ -34,5 +28,12 @@ public class ChatRoomController {
     @GetMapping("/public")
     public ResponseEntity<?> listPublicRooms() {
         return ResponseEntity.ok(chatRoomService.getAllPublicRooms());
+    }
+
+    // Цей метод вирішує проблему 404 для історії повідомлень
+    @GetMapping("/{roomId}/messages")
+    public ResponseEntity<?> getRoomMessages(@PathVariable Long roomId) {
+        // Використовуємо вже існуючий метод пошуку за ID кімнати
+        return ResponseEntity.ok(messageRepository.findByRoomIdOrderByTimestampAsc(roomId));
     }
 }
