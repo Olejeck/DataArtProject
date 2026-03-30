@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Реєстрація</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
+        .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 300px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <h2>Створити акаунт</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="text" id="username" placeholder="Логін">
+    <input type="password" id="password" placeholder="Пароль">
+    <button onclick="register()">Зареєструватися</button>
+    <p>Вже є акаунт? <a href="login.html">Увійти</a></p>
+</div>
+
+<script>
+    async function register() {
+        const data = {
+            email: document.getElementById('email').value,
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+        };
+
+        const response = await fetch('/api/users/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            alert("Реєстрація успішна! Тепер увійдіть.");
+            window.location.href = "login.html";
+        } else {
+            const error = await response.text();
+            alert("Помилка: " + error);
+        }
+    }
+</script>
+</body>
+</html>>

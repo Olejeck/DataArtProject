@@ -23,42 +23,17 @@
 <button onclick="sendMessage()" style="padding: 5px 15px;">Надіслати</button>
 
 <script>
-    var stompClient = null;
+    // Беремо токен з пам'яті браузера
+    var jwtToken = localStorage.getItem('jwtToken');
+    var currentUsername = localStorage.getItem('currentUsername');
 
-    // КРОК 1: ПЕРЕВІР ЦЕЙ ID ЧЕРЕЗ POSTMAN (GET /api/rooms/public)
-    var roomId = 1;
-
-    // КРОК 2: ВСТАВ СВІЙ ТОКЕН
-    var jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvbGVnIiwiaWF0IjoxNzc0OTAzNzU2LCJleHAiOjE3NzQ5OTAxNTZ9.xiM-UrLmnIZk4WmEjxUOkd0l1WNVAHRYXAFUD150Q4k";
-
-    function loadHistory() {
-        console.log("Завантаження історії для кімнати:", roomId);
-        fetch('/api/rooms/' + roomId + '/messages', {
-            headers: { 'Authorization': 'Bearer ' + jwtToken }
-        })
-            .then(res => {
-                if (res.status === 403 || res.status === 401) {
-                    throw new Error("Помилка авторизації (403/401). Онови токен у коді!");
-                }
-                if (!res.ok) {
-                    throw new Error("Сервер повернув помилку: " + res.status);
-                }
-                return res.json();
-            })
-            .then(data => {
-                const historyDiv = document.getElementById("history");
-                historyDiv.innerHTML = "<b>Історія завантажена:</b><br>";
-                if (data.length === 0) historyDiv.innerHTML += "<em>Повідомлень поки немає</em>";
-                data.forEach(msg => {
-                    historyDiv.innerHTML += `<div class='msg'><b>${msg.sender.username}:</b> ${msg.content}</div>`;
-                });
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById("history").innerHTML = `<b style='color:red'>${err.message}</b>`;
-            });
+    // Якщо токена немає — виганяємо на сторінку логіну
+    if (!jwtToken) {
+        window.location.href = "login.html";
     }
 
+    var stompClient = null;
+    var roomId = 1;
     function connect() {
         loadHistory(); // Завантажуємо старі повідомлення
 
@@ -89,8 +64,10 @@
             input.value = "";
         }
     }
-
-    connect();
+    function logout() {
+        localStorage.clear();
+        window.location.href = "login.html";
+    }
 </script>
 </body>
 </html>
