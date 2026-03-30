@@ -2,6 +2,7 @@ package com.ai_project.dataart.controller;
 
 import com.ai_project.dataart.dto.ChatRoomDto;
 import com.ai_project.dataart.entity.User;
+import com.ai_project.dataart.repository.MessageRepository;
 import com.ai_project.dataart.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,14 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ChatRoomController {
     private final ChatRoomService chatRoomService;
+    // У ChatRoomController.java
+    private final MessageRepository messageRepository;
 
+    @GetMapping("/{roomId}/messages")
+    public ResponseEntity<?> getRoomMessages(@PathVariable Long roomId) {
+        // Повертаємо історію повідомлень у хронологічному порядку [cite: 164]
+        return ResponseEntity.ok(messageRepository.findByRoomIdOrderByTimestampAsc(roomId));
+    }
     @PostMapping("/create")
     public ResponseEntity<?> createRoom(@RequestBody ChatRoomDto dto, @AuthenticationPrincipal User user) {
         try {

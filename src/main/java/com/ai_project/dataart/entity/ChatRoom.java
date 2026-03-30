@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.HashSet; // Додай цей імпорт
 import java.util.Set;
+
 @Data
 @Entity
 public class ChatRoom {
@@ -23,8 +25,9 @@ public class ChatRoom {
 
     @JsonIgnore
     @ManyToMany
-    private Set<User> admins; // Адміни можуть видаляти повідомлення та банити [cite: 117-124]
+    private Set<User> admins = new HashSet<>(); // Ініціалізуємо порожнім HashSet
+
     @JsonIgnore
     @ManyToMany
-    private Set<User> members;
+    private Set<User> members = new HashSet<>(); // Ініціалізуємо порожнім HashSet
 }
