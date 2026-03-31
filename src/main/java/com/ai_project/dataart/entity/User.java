@@ -25,6 +25,8 @@ public class User implements org.springframework.security.core.userdetails.UserD
     @NotBlank
     private String password; // Будемо зберігати хеш
 
+    private boolean isOnline = false;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return java.util.Collections.emptyList();

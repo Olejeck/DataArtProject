@@ -28,6 +28,6 @@ public class ChatRoom {
     private Set<User> admins = new HashSet<>(); // Ініціалізуємо порожнім HashSet
 
     @JsonIgnore
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<User> members = new HashSet<>(); // Ініціалізуємо порожнім HashSet
 }

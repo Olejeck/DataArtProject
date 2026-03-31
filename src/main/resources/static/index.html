@@ -172,9 +172,29 @@
                     document.getElementById("new-messages").innerHTML += formatMessage(msg);
                 }
             });
+            stompClient.subscribe('/topic/public.status', function (output) {
+                const data = JSON.parse(output.body);
+                updateFriendUIStatus(data.username, data.status);
+            });
+            loadSidebarData();
+        }, function(error) { /* ... */ });
+
+    }
+    function updateFriendUIStatus(username, status) {
+        const friendElements = document.querySelectorAll('#friendsList .item');
+        friendElements.forEach(el => {
+            // Якщо текст елемента містить ім'я юзера
+            if (el.innerText.includes(username)) {
+                if (status === 'ONLINE') {
+                    el.style.borderLeft = "4px solid #28a745"; // Зелений колір
+                    el.title = "В мережі";
+                } else {
+                    el.style.borderLeft = "4px solid #ccc";    // Сірий колір
+                    el.title = "Офлайн";
+                }
+            }
         });
     }
-
     function sendMessage() {
         const input = document.getElementById("messageText");
         if (input.value.trim() !== "" && stompClient) {
