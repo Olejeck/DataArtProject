@@ -1,6 +1,7 @@
 package com.ai_project.dataart.controller;
 
 import com.ai_project.dataart.dto.ChatRoomDto;
+import com.ai_project.dataart.entity.ChatRoom;
 import com.ai_project.dataart.entity.User;
 import com.ai_project.dataart.repository.MessageRepository; // Переконайся, що цей імпорт є
 import com.ai_project.dataart.service.ChatRoomService;
@@ -35,5 +36,14 @@ public class ChatRoomController {
     public ResponseEntity<?> getRoomMessages(@PathVariable Long roomId) {
         // Використовуємо вже існуючий метод пошуку за ID кімнати
         return ResponseEntity.ok(messageRepository.findByRoomIdOrderByTimestampAsc(roomId));
+    }
+    @PostMapping("/private/{username}")
+    public ResponseEntity<?> getPrivateRoom(@PathVariable String username, @AuthenticationPrincipal User user) {
+        try {
+            ChatRoom room = chatRoomService.getOrCreatePrivateChat(user, username);
+            return ResponseEntity.ok(room);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

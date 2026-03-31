@@ -43,19 +43,21 @@ public class ChatRoomService {
     @Transactional
     public ChatRoom getOrCreatePrivateChat(User user1, String username2) {
         User user2 = userRepository.findByUsername(username2)
-                .orElseThrow(() -> new RuntimeException("Юзера не знайдено"));
+                .orElseThrow(() -> new RuntimeException("Користувача не знайдено"));
 
-        // Шукаємо існуючу приватну кімнату між цими двома
+        // Шукаємо існуючу приватну кімнату, де є тільки ці два учасники
         return chatRoomRepository.findAll().stream()
-                .filter(r -> r.isPrivate() && r.getMembers().size() == 2)
-                .filter(r -> r.getMembers().contains(user1) && r.getMembers().contains(user2))
+                .filter(ChatRoom::isPrivate)
+                .filter(r -> r.getMembers().size() == 2 &&
+                        r.getMembers().contains(user1) &&
+                        r.getMembers().contains(user2))
                 .findFirst()
                 .orElseGet(() -> {
-                    // Якщо не знайшли — створюємо нову
                     ChatRoom room = new ChatRoom();
-                    room.setName("DM_" + user1.getUsername() + "_" + user2.getUsername());
+                    room.setName("Чат: " + user1.getUsername() + " та " + user2.getUsername());
                     room.setPrivate(true);
                     room.setOwner(user1);
+                    // Ініціалізуємо members, якщо вони null (про всяк випадок)
                     room.getMembers().add(user1);
                     room.getMembers().add(user2);
                     return chatRoomRepository.save(room);

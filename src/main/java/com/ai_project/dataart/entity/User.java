@@ -34,4 +34,13 @@ public class User implements org.springframework.security.core.userdetails.UserD
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
     @Override public boolean isEnabled() { return true; }
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return id.equals(user.id);
+    }
+    @Override public int hashCode() {
+        return id.hashCode();
+    }
 }

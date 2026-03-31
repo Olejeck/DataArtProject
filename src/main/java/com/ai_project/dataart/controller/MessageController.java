@@ -3,10 +3,7 @@ package com.ai_project.dataart.controller;
 import com.ai_project.dataart.entity.ChatRoom;
 import com.ai_project.dataart.entity.Message;
 import com.ai_project.dataart.entity.User;
-import com.ai_project.dataart.repository.ChatRoomRepository;
-import com.ai_project.dataart.repository.MessageRepository;
-import com.ai_project.dataart.repository.RoomBanRepository;
-import com.ai_project.dataart.repository.UserRepository;
+import com.ai_project.dataart.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -26,6 +23,7 @@ public class MessageController {
     private final MessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final RoomBanRepository roomBanRepository;
+    private final UserBanRepository userBanRepository;
 
     @MessageMapping("/chat/{roomId}")
     public void processMessage(@DestinationVariable Long roomId, @Payload String content, Principal principal) {
@@ -42,9 +40,25 @@ public class MessageController {
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Кімнату не знайдено з ID: " + roomId));
 
-        // TODO: Додати перевірку доступу (чи не забанений юзер, чи є мембером приватної кімнати)
+        // 1. ПЕРЕВІРКА ГЛОБАЛЬНОГО БАНУ (на весь месенджер)
+        // Якщо у тебе є UserBanRepository, перевіряємо тут
+        if (userBanRepository.existsByBannedUserId(sender.getId())) {
+            throw new RuntimeException("Ви забанені цілком і повністю!");
+        }
+
+        // 2. ПЕРЕВІРКА БАНУ В КОНКРЕТНІЙ КІМНАТІ (твій код)
         if (roomBanRepository.existsByRoomIdAndBannedUserId(roomId, sender.getId())) {
-            throw new RuntimeException("Помилка: Користувач забанений!");
+            throw new RuntimeException("Ви забанені в цій кімнаті!");
+        }
+
+        // 3. ПЕРЕВІРКА ДОСТУПУ ДО ПРИВАТНОЇ КІМНАТИ
+        if (room.isPrivate()) {
+            // Перевіряємо, чи є юзер у списку members
+            // Примітка: для цього members має бути завантажено (Eager або через Join)
+            boolean isMember = room.getMembers().contains(sender);
+            if (!isMember) {
+                throw new RuntimeException("У вас немає доступу до цієї приватної кімнати!");
+            }
         }
         // 4. Формування та збереження повідомлення
         Message message = new Message();
