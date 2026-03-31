@@ -63,4 +63,8 @@ public class ChatRoomService {
                     return chatRoomRepository.save(room);
                 });
     }
+
+    public ChatRoom getRoomById(Long roomId) {
+        return chatRoomRepository.getReferenceById(roomId);
+    }
 }

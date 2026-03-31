@@ -2,13 +2,17 @@ package com.ai_project.dataart.controller;
 
 import com.ai_project.dataart.dto.ChatRoomDto;
 import com.ai_project.dataart.entity.ChatRoom;
+import com.ai_project.dataart.entity.Message;
 import com.ai_project.dataart.entity.User;
 import com.ai_project.dataart.repository.MessageRepository; // Переконайся, що цей імпорт є
 import com.ai_project.dataart.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/rooms")
@@ -45,5 +49,16 @@ public class ChatRoomController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+    @GetMapping("/{roomId}/messages")
+    public ResponseEntity<List<Message>> getMessages(@PathVariable Long roomId, @AuthenticationPrincipal User user) {
+        ChatRoom room = chatRoomService.getRoomById(roomId);
+
+        // Перевірка: якщо кімната приватна, користувач МАЄ бути її учасником
+        if (room.isPrivate() && !room.getMembers().contains(user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return ResponseEntity.ok(messageRepository.findByRoomIdOrderByTimestampAsc(room.getId()));
     }
 }

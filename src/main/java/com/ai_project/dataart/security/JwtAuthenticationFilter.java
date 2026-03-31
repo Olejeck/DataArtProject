@@ -9,12 +9,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -51,10 +53,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Якщо юзер існує і токен валідний
             if (jwtService.isTokenValid(jwt, user.getUsername())) {
+                String roleFromToken = jwtService.extractRole(jwt); // Дістаємо ADMIN із токена
+                List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + roleFromToken));
+
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        user.getUsername(),
+                        user,
                         null,
-                        user.getAuthorities() // ВАЖЛИВО: передати список прав (authorities)
+                        authorities // Тепер тут точно ROLE_ADMIN, бо ми взяли це з токена
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 

@@ -34,7 +34,7 @@ public class User implements org.springframework.security.core.userdetails.UserD
     public enum Role { USER, ADMIN }
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER; // За замовчуванням всі - юзери
+    private Role role = Role.ADMIN; // За замовчуванням всі - юзери
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
