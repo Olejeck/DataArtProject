@@ -158,27 +158,24 @@
         apiRequest('/api/rooms/' + currentRoomId + '/messages')
             .then(res => {
                 if (res.status === 403) {
-                    // Замість безкінечного alert, просто скидаємо кімнату на загальну
-                    console.warn("Доступ до кімнати " + currentRoomId + " заборонено. Повертаємось до загальної.");
-                    localStorage.removeItem('currentRoomId'); // Очищуємо "поганий" ID
-                    currentRoomId = 1; // Ставимо ID загальної кімнати (або інший дефолт)
-                    loadHistory(); // Пробуємо завантажити дефолтну один раз
+                    console.warn("Доступ заборонено до кімнати " + currentRoomId);
+                    // Якщо це не загальний чат, скидаємо на ID 1
+                    if (currentRoomId !== 1) {
+                        currentRoomId = 1;
+                        localStorage.setItem('currentRoomId', 1);
+                        loadHistory();
+                    }
                     return null;
                 }
-                if (!res.ok) throw new Error("Помилка завантаження");
-                return res.json();
+                return res.ok ? res.json() : null;
             })
             .then(messages => {
                 if (!messages) return;
                 const historyDiv = document.getElementById("history");
                 historyDiv.innerHTML = "";
-                messages.forEach(msg => {
-                    historyDiv.innerHTML += formatMessage(msg);
-                });
-                const objDiv = document.getElementById("messages");
-                objDiv.scrollTop = objDiv.scrollHeight;
-            })
-            .catch(err => console.error("History error:", err));
+                messages.forEach(msg => historyDiv.innerHTML += formatMessage(msg));
+                document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+            });
     }
 
 

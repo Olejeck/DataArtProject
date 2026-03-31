@@ -55,6 +55,6 @@ public class ChatRoomController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        return ResponseEntity.ok(messageRepository.findByRoomIdOrderByTimestampAsc(room.getId()));
+        return ResponseEntity.ok(messageRepository.findByRoomIdOrderByTimestampAsc(roomId));
     }
 }
