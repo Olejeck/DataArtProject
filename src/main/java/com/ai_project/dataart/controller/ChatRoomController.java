@@ -4,7 +4,7 @@ import com.ai_project.dataart.dto.ChatRoomDto;
 import com.ai_project.dataart.entity.ChatRoom;
 import com.ai_project.dataart.entity.Message;
 import com.ai_project.dataart.entity.User;
-import com.ai_project.dataart.repository.MessageRepository; // Переконайся, що цей імпорт є
+import com.ai_project.dataart.repository.MessageRepository;
 import com.ai_project.dataart.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatRoomController {
     private final ChatRoomService chatRoomService;
-    private final MessageRepository messageRepository; // Додаємо репозиторій сюди
+    private final MessageRepository messageRepository;
 
     @PostMapping("/create")
     public ResponseEntity<?> createRoom(@RequestBody ChatRoomDto dto, @AuthenticationPrincipal User user) {
@@ -35,12 +35,6 @@ public class ChatRoomController {
         return ResponseEntity.ok(chatRoomService.getAllPublicRooms());
     }
 
-    // Цей метод вирішує проблему 404 для історії повідомлень
-    @GetMapping("/{roomId}/messages")
-    public ResponseEntity<?> getRoomMessages(@PathVariable Long roomId) {
-        // Використовуємо вже існуючий метод пошуку за ID кімнати
-        return ResponseEntity.ok(messageRepository.findByRoomIdOrderByTimestampAsc(roomId));
-    }
     @PostMapping("/private/{username}")
     public ResponseEntity<?> getPrivateRoom(@PathVariable String username, @AuthenticationPrincipal User user) {
         try {
@@ -50,11 +44,13 @@ public class ChatRoomController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // ЗАЛИШАЄМО ТІЛЬКИ ЦЕЙ МЕТОД ДЛЯ ПОВІДОМЛЕНЬ
     @GetMapping("/{roomId}/messages")
     public ResponseEntity<List<Message>> getMessages(@PathVariable Long roomId, @AuthenticationPrincipal User user) {
         ChatRoom room = chatRoomService.getRoomById(roomId);
 
-        // Перевірка: якщо кімната приватна, користувач МАЄ бути її учасником
+        // Якщо кімната приватна, користувач МАЄ бути її учасником
         if (room.isPrivate() && !room.getMembers().contains(user)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

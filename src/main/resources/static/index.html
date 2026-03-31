@@ -80,15 +80,6 @@
 
     // --- ФУНКЦІЇ API ---
 
-    async function apiRequest(url, method = 'GET') {
-        const res = await fetch(url, {
-            method: method,
-            headers: { 'Authorization': 'Bearer ' + jwtToken, 'Content-Type': 'application/json' }
-        });
-        if (res.status === 403) logout();
-        return res;
-    }
-
     async function loadSidebarData() {
         // 1. Завантаження друзів
         const friendsRes = await apiRequest('/api/friends');
@@ -118,7 +109,7 @@
         const rList = document.getElementById('roomsList');
         rList.innerHTML = '';
         rooms.forEach(r => {
-            rList.innerHTML += `<div class="item ${r.id === currentRoomId ? 'active' : ''}" onclick="switchRoom(${r.id})"># ${r.name}</div>`;
+            rList.innerHTML += `<div class="item ${r.id === currentRoomId ? 'active' : ''}" data-id="${r.id}" onclick="switchRoom(${r.id})"># ${r.name}</div>`;
         });
     }
 
@@ -147,26 +138,50 @@
 
     // --- ВЕБСОКЕТИ ТА ІСТОРІЯ ---
 
+    async function apiRequest(url, method = 'GET', body = null) {
+        const options = {
+            method: method,
+            headers: { 'Authorization': 'Bearer ' + jwtToken, 'Content-Type': 'application/json' }
+        };
+        if (body) options.body = JSON.stringify(body);
+
+        const res = await fetch(url, options);
+
+        // ВИПРАВЛЕННЯ: Логаут тільки при 401 (токен протермінувався або зіпсований)
+        if (res.status === 401) {
+            logout();
+        }
+        return res;
+    }
+
     function loadHistory() {
         apiRequest('/api/rooms/' + currentRoomId + '/messages')
             .then(res => {
-                if (!res.ok) throw new Error("Кімнату не знайдено");
+                if (res.status === 403) {
+                    // Замість безкінечного alert, просто скидаємо кімнату на загальну
+                    console.warn("Доступ до кімнати " + currentRoomId + " заборонено. Повертаємось до загальної.");
+                    localStorage.removeItem('currentRoomId'); // Очищуємо "поганий" ID
+                    currentRoomId = 1; // Ставимо ID загальної кімнати (або інший дефолт)
+                    loadHistory(); // Пробуємо завантажити дефолтну один раз
+                    return null;
+                }
+                if (!res.ok) throw new Error("Помилка завантаження");
                 return res.json();
             })
             .then(messages => {
+                if (!messages) return;
                 const historyDiv = document.getElementById("history");
                 historyDiv.innerHTML = "";
                 messages.forEach(msg => {
-                    historyDiv.innerHTML += formatMessage(msg); // Використовуємо нашу функцію з картинками
+                    historyDiv.innerHTML += formatMessage(msg);
                 });
                 const objDiv = document.getElementById("messages");
                 objDiv.scrollTop = objDiv.scrollHeight;
             })
-            .catch(err => {
-                console.error(err);
-                document.getElementById("history").innerHTML = `<em style="color:red">Помилка: ${err.message}. Оберіть кімнату в списку.</em>`;
-            });
+            .catch(err => console.error("History error:", err));
     }
+
+
 
     function connect() {
         loadSidebarData();
@@ -268,17 +283,84 @@
     }
 
     function showNotificationDot(roomId) {
-        // Шукаємо елемент кімнати або друга в сайдбарі
         const items = document.querySelectorAll('.item');
         items.forEach(el => {
-            // Тут потрібна логіка, щоб знайти саме потрібний рядок по ID або імені
-            // Наприклад, додамо до елементів атрибут data-id
             if (el.getAttribute('data-id') == roomId) {
-                el.style.backgroundColor = "#fff3cd"; // Підсвічуємо жовтим
-                el.innerHTML += " 🔴"; // Додаємо червону цятку
+                el.style.backgroundColor = "#fff3cd";
+                // Додаємо цятку, тільки якщо її ще немає
+                if (!el.innerHTML.includes("🔴")) {
+                    el.innerHTML += " 🔴";
+                }
             }
         });
     }
+
+    const jwtToken = localStorage.getItem('jwtToken');
+    const myName = localStorage.getItem('currentUsername');
+
+    async function loadUsers() {
+        const res = await fetch('/api/admin/users', {
+            headers: { 'Authorization': 'Bearer ' + jwtToken }
+        });
+        if (!res.ok) {
+            document.body.innerHTML = "<h1>403 - Доступ заборонено. Ви не адмін!</h1>";
+            return;
+        }
+
+        const users = await res.json();
+        const table = document.getElementById('userTable');
+        table.innerHTML = "";
+
+        users.forEach(u => {
+            let actionBtn = '';
+            // 1. Захист від бану самого себе
+            if (u.username === myName) {
+                actionBtn = '<em>Це ви</em>';
+            }
+            // 2. Якщо вже забанений - показуємо UNBAN
+            else if (u.isBanned) {
+                actionBtn = `<button class="ban-btn" style="background:#28a745;" onclick="unbanUser('${u.username}')">UNBAN</button>`;
+            }
+            // 3. Якщо нормальний - показуємо BAN
+            else {
+                actionBtn = `<button class="ban-btn" onclick="banUser('${u.username}')">BAN</button>`;
+            }
+
+            // Забанених підсвічуємо рожевим фоном
+            table.innerHTML += `
+                <tr style="${u.isBanned ? 'background-color: #f8d7da;' : ''}">
+                    <td>${u.id}</td>
+                    <td>${u.username}</td>
+                    <td>${u.email}</td>
+                    <td>${u.role}</td>
+                    <td>${actionBtn}</td>
+                </tr>`;
+        });
+    }
+
+    async function banUser(username) {
+        const reason = prompt("Вкажіть причину бану:");
+        if (!reason) return;
+
+        const res = await fetch('/api/admin/ban/' + username, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + jwtToken, 'Content-Type': 'text/plain' },
+            body: reason
+        });
+        if (res.ok) loadUsers(); // Перезавантажуємо таблицю
+        else alert("Помилка: " + await res.text());
+    }
+
+    async function unbanUser(username) {
+        const res = await fetch('/api/admin/unban/' + username, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + jwtToken }
+        });
+        if (res.ok) loadUsers(); // Перезавантажуємо таблицю
+        else alert("Помилка: " + await res.text());
+    }
+
+    loadUsers();
     connect();
 </script>
 </body>
