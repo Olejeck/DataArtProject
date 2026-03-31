@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       TZ: UTC
-      PGTIMEZONE: UTC # Це у тебе вже є, залишаємо
+      PGTIMEZONE: UTC
     ports:
       - "5432:5432"
 

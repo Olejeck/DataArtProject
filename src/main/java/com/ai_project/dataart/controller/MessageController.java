@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -71,5 +72,15 @@ public class MessageController {
 
         // 5. Відправка повідомлення підписникам кімнати
         messagingTemplate.convertAndSend("/topic/room." + roomId, savedMessage);
+        room.getMembers().forEach(member -> {
+            if (!member.getUsername().equals(sender.getUsername())) {
+                // Відправляємо сповіщення кожному учаснику особисто
+                messagingTemplate.convertAndSendToUser(
+                        member.getUsername(),
+                        "/queue/notifications",
+                        Map.of("roomId", roomId, "sender", sender.getUsername())
+                );
+            }
+        });
     }
 }

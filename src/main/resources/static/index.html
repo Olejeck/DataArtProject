@@ -73,7 +73,7 @@
     const jwtToken = localStorage.getItem('jwtToken');
     const currentUsername = localStorage.getItem('currentUsername');
     let stompClient = null;
-    let currentRoomId = 1; // За замовчуванням загальна кімната
+    let currentRoomId = parseInt(localStorage.getItem('currentRoomId')) || 1;
 
     if (!jwtToken) window.location.href = "login.html";
     document.getElementById('userName').innerText = "Привіт, " + currentUsername;
@@ -136,24 +136,35 @@
 
     function switchRoom(id) {
         currentRoomId = id;
-        document.getElementById('history').innerHTML = 'Завантаження...';
+        localStorage.setItem('currentRoomId', id); // Зберігаємо вибір
+
+        document.getElementById('history').innerHTML = 'Завантаження історії...';
         document.getElementById('new-messages').innerHTML = '';
+
         loadHistory();
         loadSidebarData();
-        // У реальному проекті тут треба було б відписатися від старого топіка і підписатися на новий
     }
 
     // --- ВЕБСОКЕТИ ТА ІСТОРІЯ ---
 
     function loadHistory() {
         apiRequest('/api/rooms/' + currentRoomId + '/messages')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Кімнату не знайдено");
+                return res.json();
+            })
             .then(messages => {
                 const historyDiv = document.getElementById("history");
                 historyDiv.innerHTML = "";
-                messages.forEach(msg => formatMessage(msg));
+                messages.forEach(msg => {
+                    historyDiv.innerHTML += formatMessage(msg); // Використовуємо нашу функцію з картинками
+                });
                 const objDiv = document.getElementById("messages");
                 objDiv.scrollTop = objDiv.scrollHeight;
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("history").innerHTML = `<em style="color:red">Помилка: ${err.message}. Оберіть кімнату в списку.</em>`;
             });
     }
 
@@ -175,6 +186,13 @@
             stompClient.subscribe('/topic/public.status', function (output) {
                 const data = JSON.parse(output.body);
                 updateFriendUIStatus(data.username, data.status);
+            });
+            stompClient.subscribe('/user/queue/notifications', function (output) {
+                const notification = JSON.parse(output.body);
+                // Якщо це не та кімната, в якій ми зараз сидимо
+                if (notification.roomId !== currentRoomId) {
+                    showNotificationDot(notification.roomId);
+                }
             });
             loadSidebarData();
         }, function(error) { /* ... */ });
@@ -249,8 +267,18 @@
         return `<p><b>${msg.sender.username}:</b> ${content}</p>`;
     }
 
-    // Потім використовуй це:
-    // document.getElementById("new-messages").innerHTML += formatMessage(msg);
+    function showNotificationDot(roomId) {
+        // Шукаємо елемент кімнати або друга в сайдбарі
+        const items = document.querySelectorAll('.item');
+        items.forEach(el => {
+            // Тут потрібна логіка, щоб знайти саме потрібний рядок по ID або імені
+            // Наприклад, додамо до елементів атрибут data-id
+            if (el.getAttribute('data-id') == roomId) {
+                el.style.backgroundColor = "#fff3cd"; // Підсвічуємо жовтим
+                el.innerHTML += " 🔴"; // Додаємо червону цятку
+            }
+        });
+    }
     connect();
 </script>
 </body>

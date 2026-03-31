@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель Адміна</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .ban-btn { background: #dc3545; color: white; border: none; cursor: pointer; padding: 5px; }
+    </style>
+</head>
+<body>
+<h1>Управління користувачами</h1>
+<div id="status"></div>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Дія</th>
+    </tr>
+    </thead>
+    <tbody id="userTable"></tbody>
+</table>
+
+<script>
+    const jwtToken = localStorage.getItem('jwtToken');
+
+    async function loadUsers() {
+        const res = await fetch('/api/admin/users', {
+            headers: { 'Authorization': 'Bearer ' + jwtToken }
+        });
+        if (!res.ok) {
+            document.body.innerHTML = "<h1>403 - Доступ заборонено. Ви не адмін!</h1>";
+            return;
+        }
+        const users = await res.json();
+        const table = document.getElementById('userTable');
+        table.innerHTML = "";
+        users.forEach(u => {
+            table.innerHTML += `
+                <tr>
+                    <td>${u.id}</td>
+                    <td>${u.username}</td>
+                    <td>${u.email}</td>
+                    <td><button class="ban-btn" onclick="banUser('${u.username}')">BAN</button></td>
+                </tr>`;
+        });
+    }
+
+    async function banUser(username) {
+        const reason = prompt("Вкажіть причину бану:");
+        if (!reason) return;
+
+        const res = await fetch('/api/admin/ban/' + username, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + jwtToken, 'Content-Type': 'text/plain' },
+            body: reason
+        });
+        if (res.ok) alert("Забанено!");
+        else alert("Помилка при бані");
+    }
+
+    loadUsers();
+</script>
+</body>
+</html>

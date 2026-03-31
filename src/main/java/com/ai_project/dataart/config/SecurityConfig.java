@@ -35,6 +35,7 @@ public class SecurityConfig {
                         // Всі запити до /api/friends потребують авторизації (JWT)
                         .requestMatchers("/api/friends/**").authenticated()
                         .requestMatchers("/api/files/download/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

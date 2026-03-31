@@ -4,8 +4,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collection;
+import java.util.List;
 
 @Data
 @Entity
@@ -27,9 +29,16 @@ public class User implements org.springframework.security.core.userdetails.UserD
 
     private boolean isOnline = false;
 
+    // src/main/java/com/ai_project/dataart/entity/User.java
+
+    public enum Role { USER, ADMIN }
+
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.USER; // За замовчуванням всі - юзери
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return java.util.Collections.emptyList();
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override public boolean isAccountNonExpired() { return true; }

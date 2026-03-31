@@ -14,4 +14,6 @@ public class UserBan {
 
     @ManyToOne
     private User bannedUser; // Кого забанили
+
+    private String reason;
 }
