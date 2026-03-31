@@ -37,7 +37,7 @@ public class UserController {
             User user = userService.authenticate(loginDto);
 
             // Генеруємо токен
-            String jwtToken = jwtService.generateToken(user.getUsername());
+            String jwtToken = jwtService.generateToken(user);
 
             // Повертаємо токен у вигляді JSON: { "token": "ey..." }
             return ResponseEntity.ok(Map.of("token", jwtToken));

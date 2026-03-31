@@ -50,13 +50,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             User user = userRepository.findByUsername(username).orElse(null);
 
             // Якщо юзер існує і токен валідний
-            if (user != null && jwtService.isTokenValid(jwt, user.getUsername())) {
-                
-                // Створюємо об'єкт автентифікації для Spring Security
+            if (jwtService.isTokenValid(jwt, user.getUsername())) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        user,
+                        user.getUsername(),
                         null,
-                        user.getAuthorities()
+                        user.getAuthorities() // ВАЖЛИВО: передати список прав (authorities)
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 

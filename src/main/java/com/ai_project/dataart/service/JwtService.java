@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -28,8 +29,16 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(String username) {
-        return generateToken(new HashMap<>(), username);
+    public String generateToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+
+        // Якщо userDetails - це наш клас User, дістаємо роль
+        if (userDetails instanceof com.ai_project.dataart.entity.User) {
+            com.ai_project.dataart.entity.User user = (com.ai_project.dataart.entity.User) userDetails;
+            claims.put("role", user.getRole().name()); // Записуємо ADMIN або USER
+        }
+
+        return generateToken(claims, userDetails.getUsername());
     }
 
     public String generateToken(Map<String, Object> extraClaims, String username) {
