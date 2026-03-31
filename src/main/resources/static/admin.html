@@ -7,7 +7,8 @@
         body { font-family: sans-serif; padding: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        .ban-btn { background: #dc3545; color: white; border: none; cursor: pointer; padding: 5px; }
+        .ban-btn { background: #dc3545; color: white; border: none; cursor: pointer; padding: 5px; border-radius: 3px; }
+        .unban-btn { background: #28a745; color: white; border: none; cursor: pointer; padding: 5px; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -19,6 +20,7 @@
         <th>ID</th>
         <th>Username</th>
         <th>Email</th>
+        <th>Роль</th>
         <th>Дія</th>
     </tr>
     </thead>
@@ -27,25 +29,46 @@
 
 <script>
     const jwtToken = localStorage.getItem('jwtToken');
+    const myName = localStorage.getItem('currentUsername');
 
     async function loadUsers() {
         const res = await fetch('/api/admin/users', {
             headers: { 'Authorization': 'Bearer ' + jwtToken }
         });
+
         if (!res.ok) {
             document.body.innerHTML = "<h1>403 - Доступ заборонено. Ви не адмін!</h1>";
             return;
         }
+
         const users = await res.json();
         const table = document.getElementById('userTable');
         table.innerHTML = "";
+
         users.forEach(u => {
+            let actionBtn = '';
+
+            // 1. Якщо юзер забанений - показуємо зелену кнопку UNBAN
+            if (u.isBanned) {
+                actionBtn = `<button class="unban-btn" onclick="unbanUser('${u.username}')">UNBAN</button>`;
+            }
+            // 2. Захист від самозабану (перевіряємо ПІСЛЯ перевірки на бан)
+            else if (u.username === myName) {
+                actionBtn = '<em>Це ви</em>';
+            }
+            // 3. Звичайний юзер - показуємо BAN
+            else {
+                actionBtn = `<button class="ban-btn" onclick="banUser('${u.username}')">BAN</button>`;
+            }
+
+            // Рожевий фон для забанених
             table.innerHTML += `
-                <tr>
+                <tr style="${u.isBanned ? 'background-color: #f8d7da;' : ''}">
                     <td>${u.id}</td>
                     <td>${u.username}</td>
                     <td>${u.email}</td>
-                    <td><button class="ban-btn" onclick="banUser('${u.username}')">BAN</button></td>
+                    <td>${u.role}</td>
+                    <td>${actionBtn}</td>
                 </tr>`;
         });
     }
@@ -59,8 +82,19 @@
             headers: { 'Authorization': 'Bearer ' + jwtToken, 'Content-Type': 'text/plain' },
             body: reason
         });
-        if (res.ok) alert("Забанено!");
-        else alert("Помилка при бані");
+
+        if (res.ok) loadUsers(); // Оновлюємо таблицю без перезавантаження сторінки
+        else alert("Помилка при бані: " + await res.text());
+    }
+
+    async function unbanUser(username) {
+        const res = await fetch('/api/admin/unban/' + username, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + jwtToken }
+        });
+
+        if (res.ok) loadUsers(); // Оновлюємо таблицю
+        else alert("Помилка при розбані: " + await res.text());
     }
 
     loadUsers();

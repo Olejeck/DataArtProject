@@ -34,7 +34,10 @@
 <div class="sidebar">
     <div class="sidebar-header">
         <div id="userName">Завантаження...</div>
-        <button class="btn-logout" onclick="logout()">Вийти</button>
+        <div style="margin-top: 10px;">
+            <button id="adminBtn" class="btn-logout" style="display:none; background:#ffc107; color:black; margin-top:0;" onclick="window.location.href='admin.html'">⚙️ Адмінка</button>
+            <button class="btn-logout" style="margin-top:0;" onclick="logout()">Вийти</button>
+        </div>
     </div>
 
     <div class="sidebar-content">
@@ -76,6 +79,20 @@
     let currentRoomId = parseInt(localStorage.getItem('currentRoomId')) || 1;
 
     if (!jwtToken) window.location.href = "login.html";
+    // Читаємо інформацію (Payload) з JWT-токена
+    try {
+        // Токен складається з 3 частин, розділених крапкою. Нам потрібна друга (індекс 1)
+        const payloadBase64 = jwtToken.split('.')[1];
+        // Декодуємо з Base64 і перетворюємо в об'єкт
+        const payload = JSON.parse(atob(payloadBase64));
+
+        // Якщо роль ADMIN, показуємо кнопку
+        if (payload.role === 'ADMIN') {
+            document.getElementById('adminBtn').style.display = 'inline-block';
+        }
+    } catch (e) {
+        console.error("Помилка читання токена", e);
+    }
     document.getElementById('userName').innerText = "Привіт, " + currentUsername;
 
     // --- ФУНКЦІЇ API ---
